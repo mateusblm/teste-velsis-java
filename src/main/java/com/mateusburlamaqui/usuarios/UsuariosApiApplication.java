@@ -1,4 +1,4 @@
-package com.velsis.java.teste.mateusburlamaqui.usuarios_api;
+package com.mateusburlamaqui.usuarios;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

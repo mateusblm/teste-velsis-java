@@ -1,4 +1,4 @@
-package com.velsis.java.teste.mateusburlamaqui.usuarios_api;
+package com.mateusburlamaqui.usuarios;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
