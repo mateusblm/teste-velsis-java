@@ -23,6 +23,12 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable()).sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
             .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**"
+                )
+                .permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/usuarios")
                 .permitAll()
                 .anyRequest()
