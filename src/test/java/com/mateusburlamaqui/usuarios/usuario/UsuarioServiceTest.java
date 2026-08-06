@@ -1,5 +1,6 @@
 package com.mateusburlamaqui.usuarios.usuario;
 import com.mateusburlamaqui.usuarios.email.EmailService;
+import com.mateusburlamaqui.usuarios.usuario.dto.AtualizarUsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioResponse;
 import com.mateusburlamaqui.usuarios.usuario.excecao.UsuarioNaoEncontradoException;
@@ -17,6 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,5 +82,73 @@ class UsuarioServiceTest {
         assertEquals("Usuário não encontrado com o ID: 99",excecao.getMessage());
 
         verify(usuarioRepository).findById(99L);
+    }
+
+    @Test
+    void deveAtualizarUsuarioSemAlterarSenha() {
+        Usuario usuario = new Usuario( "Mateus", "mateus-antigo@gmail.com", "senha-antiga-criptografada");
+
+        AtualizarUsuarioRequest request = new AtualizarUsuarioRequest("Mateus Burlamaqui", "mateus-novo@gmail.com", null);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        when(usuarioRepository.saveAndFlush(usuario)).thenReturn(usuario);
+
+        UsuarioResponse response =usuarioService.atualizar(1L, request);
+
+        assertEquals("Mateus Burlamaqui", response.nome());
+        assertEquals("mateus-novo@gmail.com", response.email());
+        assertEquals("senha-antiga-criptografada",usuario.getSenha());
+
+        verify(usuarioRepository).findById(1L);
+        verify(usuarioRepository).saveAndFlush(usuario);
+
+        verify(passwordEncoder, never()).encode(anyString());
+
+        verify(emailService).enviar(eq("mateus-novo@gmail.com"),anyString());
+    }
+
+    @Test
+    void deveAtualizarUsuarioComNovaSenha() {
+        Usuario usuario = new Usuario( "Mateus", "mateus-antigo@gmail.com", "senha-antiga-criptografada");
+
+        AtualizarUsuarioRequest request = new AtualizarUsuarioRequest("Mateus Burlamaqui", "mateus-novo@gmail.com", "novaSenha123");
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        when(passwordEncoder.encode("novaSenha123")).thenReturn("nova-senha-criptografada");
+
+        when(usuarioRepository.saveAndFlush(usuario)).thenReturn(usuario);
+
+        UsuarioResponse response = usuarioService.atualizar(1L, request);
+
+        assertEquals("Mateus Burlamaqui", response.nome());
+        assertEquals("mateus-novo@gmail.com", response.email());
+        assertEquals("nova-senha-criptografada",usuario.getSenha());
+
+        verify(passwordEncoder).encode("novaSenha123");
+
+        verify(usuarioRepository).saveAndFlush(usuario);
+
+        verify(emailService).enviar(eq("mateus-novo@gmail.com"), anyString());
+    }
+
+    @Test
+    void deveLancarErroAoAtualizarUsuarioInexistente() {
+        AtualizarUsuarioRequest request = new AtualizarUsuarioRequest("Mateus Burlamaqui","mateus@gmail.com",null);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
+
+        UsuarioNaoEncontradoException excecao = assertThrows(UsuarioNaoEncontradoException.class,() -> usuarioService.atualizar(1L, request));
+
+        assertEquals("Usuário não encontrado com o ID: 1", excecao.getMessage());
+
+        verify(usuarioRepository).findById(1L);
+
+        verify(usuarioRepository, never()).saveAndFlush(any(Usuario.class));
+
+        verify(passwordEncoder, never()).encode(anyString());
+
+        verify(emailService, never()).enviar(anyString(), anyString());
     }
 }
