@@ -179,6 +179,8 @@ Os testes usam H2 e cobrem:
 - senha incorreta;
 - autenticação válida.
 
+Os cenários foram escolhidos por cobrirem as regras de negócio mais sensíveis da aplicação como integridade dos dados, segurança das credenciais, atualização de senha, consulta paginada e tratamento adequado dos principais erros retornados ao cliente. Os testes de service validam as regras de negócio de forma isolada, os testes de controller verificam os contratos HTTP, e os testes de integração confirmam que as regras de segurança funcionam com a aplicação carregada.
+
 ## Endpoints
 
 ### Cadastrar usuário
