@@ -3,6 +3,8 @@ package com.mateusburlamaqui.usuarios.usuario;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.mateusburlamaqui.usuarios.email.EmailService;
 import com.mateusburlamaqui.usuarios.usuario.dto.AtualizarUsuarioRequest;
@@ -59,6 +61,20 @@ public class UsuarioService {
         emailService.enviar(usuarioAtualizado.getEmail(), "Dados atualizados com sucesso.");
 
         return UsuarioResponse.de(usuarioAtualizado);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<UsuarioResponse> listar(String nome, Pageable pageable) {
+        Page<Usuario> usuarios;
+
+        if (nome == null || nome.isBlank()) {
+            usuarios = usuarioRepository.findAll(pageable);
+        } else {
+            usuarios = usuarioRepository.findByNomeContainingIgnoreCase(nome.trim(), pageable);
+        }
+
+        return usuarios.map(usuario -> UsuarioResponse.de(usuario));
     }
     
 }
