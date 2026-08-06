@@ -1,6 +1,6 @@
 package com.mateusburlamaqui.usuarios.excecao;
 
-import com.mateusburlamaqui.usuarios.email.excecao.EmailJaCadastradoException;
+import com.mateusburlamaqui.usuarios.usuario.excecao.EmailJaCadastradoException;
 import com.mateusburlamaqui.usuarios.usuario.excecao.UsuarioNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

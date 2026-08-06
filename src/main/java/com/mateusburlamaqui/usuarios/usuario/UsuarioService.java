@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.mateusburlamaqui.usuarios.email.EmailService;
-import com.mateusburlamaqui.usuarios.email.excecao.EmailJaCadastradoException;
+import com.mateusburlamaqui.usuarios.usuario.excecao.EmailJaCadastradoException;
 import com.mateusburlamaqui.usuarios.usuario.dto.AtualizarUsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioResponse;

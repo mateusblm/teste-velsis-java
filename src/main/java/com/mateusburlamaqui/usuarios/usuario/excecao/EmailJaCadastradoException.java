@@ -1,4 +1,4 @@
-package com.mateusburlamaqui.usuarios.email.excecao;
+package com.mateusburlamaqui.usuarios.usuario.excecao;
 
 public class EmailJaCadastradoException extends RuntimeException {
 
