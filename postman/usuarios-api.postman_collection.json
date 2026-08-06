@@ -1,0 +1,792 @@
+{
+  "info": {
+    "_postman_id": "6ecb2d18-1e1d-4aa3-8d0b-usuarios-api",
+    "name": "Usuários API",
+    "description": "Collection sequencial para validação da API REST de usuários. Os testes usam variáveis de collection e HTTP Basic.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "usuarioId",
+      "value": ""
+    },
+    {
+      "key": "emailTeste",
+      "value": ""
+    },
+    {
+      "key": "senhaAtual",
+      "value": "senha123"
+    },
+    {
+      "key": "novaSenha",
+      "value": "novaSenha123"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Cadastro público válido e resposta sem senha",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Mateus Burlamaqui\",\n  \"email\": \"{{emailTeste}}\",\n  \"senha\": \"{{senhaAtual}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"emailTeste\", \"mateus.\" + Date.now() + \"@example.com\");",
+              "pm.collectionVariables.set(\"senhaAtual\", \"senha123\");",
+              "pm.collectionVariables.set(\"novaSenha\", \"novaSenha123\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Cadastro retorna 201 Created\", function () {",
+              "    pm.expect(pm.response.code).to.eql(201);",
+              "});",
+              "pm.test(\"Resposta contém id, nome e email e não expõe senha\", function () {",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"id\");",
+              "    pm.expect(resposta).to.have.property(\"nome\", \"Mateus Burlamaqui\");",
+              "    pm.expect(resposta).to.have.property(\"email\", pm.collectionVariables.get(\"emailTeste\"));",
+              "    pm.expect(resposta).to.not.have.property(\"senha\");",
+              "    pm.collectionVariables.set(\"usuarioId\", resposta.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Consulta sem autenticação",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Consulta sem autenticação retorna 401\", function () {",
+              "    pm.expect(pm.response.code).to.eql(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Consulta com senha incorreta",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "senha-incorreta",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Senha incorreta retorna 401\", function () {",
+              "    pm.expect(pm.response.code).to.eql(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Consulta por ID autenticada",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/{{usuarioId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "{{usuarioId}}"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{senhaAtual}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Consulta por ID retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta.id).to.eql(Number(pm.collectionVariables.get(\"usuarioId\")));",
+              "    pm.expect(resposta.email).to.eql(pm.collectionVariables.get(\"emailTeste\"));",
+              "    pm.expect(resposta.nome).to.eql(\"Mateus Burlamaqui\");",
+              "    pm.expect(resposta).to.not.have.property(\"senha\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Consulta de ID inexistente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/999999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "999999999"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{senhaAtual}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Usuário inexistente retorna 404\", function () {",
+              "    pm.expect(pm.response.code).to.eql(404);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"status\", 404);",
+              "    pm.expect(resposta).to.have.property(\"mensagem\");",
+              "    pm.expect(resposta).to.have.property(\"campos\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Cadastro com dados inválidos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"\",\n  \"email\": \"email-invalido\",\n  \"senha\": \"123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Dados inválidos retorna 400\", function () {",
+              "    pm.expect(pm.response.code).to.eql(400);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"status\", 400);",
+              "    pm.expect(resposta.campos).to.have.property(\"nome\");",
+              "    pm.expect(resposta.campos).to.have.property(\"email\");",
+              "    pm.expect(resposta.campos).to.have.property(\"senha\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Cadastro com e-mail duplicado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Mateus Burlamaqui\",\n  \"email\": \"{{emailTeste}}\",\n  \"senha\": \"{{senhaAtual}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"E-mail duplicado retorna 409\", function () {",
+              "    pm.expect(pm.response.code).to.eql(409);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"status\", 409);",
+              "    pm.expect(resposta).to.have.property(\"mensagem\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Atualização sem alterar senha",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/{{usuarioId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "{{usuarioId}}"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{senhaAtual}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Mateus Burlamaqui Moreira\",\n  \"email\": \"{{emailTeste}}\",\n  \"senha\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Atualização sem nova senha retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta.id).to.eql(Number(pm.collectionVariables.get(\"usuarioId\")));",
+              "    pm.expect(resposta.nome).to.eql(\"Mateus Burlamaqui Moreira\");",
+              "    pm.expect(resposta.email).to.eql(pm.collectionVariables.get(\"emailTeste\"));",
+              "    pm.expect(resposta).to.not.have.property(\"senha\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Senha antiga continua funcionando",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/{{usuarioId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "{{usuarioId}}"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{senhaAtual}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Senha antiga retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta.id).to.eql(Number(pm.collectionVariables.get(\"usuarioId\")));",
+              "    pm.expect(resposta).to.not.have.property(\"senha\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Alteração da senha",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/{{usuarioId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "{{usuarioId}}"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{senhaAtual}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Mateus Burlamaqui Moreira\",\n  \"email\": \"{{emailTeste}}\",\n  \"senha\": \"{{novaSenha}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Alteração da senha retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta.id).to.eql(Number(pm.collectionVariables.get(\"usuarioId\")));",
+              "    pm.expect(resposta.nome).to.eql(\"Mateus Burlamaqui Moreira\");",
+              "    pm.expect(resposta).to.not.have.property(\"senha\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Senha antiga deixa de funcionar",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/{{usuarioId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "{{usuarioId}}"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{senhaAtual}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Senha antiga após alteração retorna 401\", function () {",
+              "    pm.expect(pm.response.code).to.eql(401);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Nova senha funciona",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios/{{usuarioId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios",
+            "{{usuarioId}}"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{novaSenha}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Nova senha retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta.id).to.eql(Number(pm.collectionVariables.get(\"usuarioId\")));",
+              "    pm.expect(resposta).to.not.have.property(\"senha\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Listagem paginada",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios?page=0&size=5&sort=nome,asc",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios?page=0&size=5&sort=nome,asc"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{novaSenha}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Listagem paginada retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"content\").that.is.an(\"array\");",
+              "    pm.expect(resposta).to.have.property(\"number\", 0);",
+              "    pm.expect(resposta).to.have.property(\"size\", 5);",
+              "    pm.expect(resposta.totalElements).to.be.at.least(1);",
+              "    pm.expect(resposta.content.length).to.be.at.most(5);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Filtro por parte do nome",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios?nome=Burlamaqui",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios?nome=Burlamaqui"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{novaSenha}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Filtro por parte do nome retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"content\").that.is.an(\"array\");",
+              "    pm.expect(resposta.content.some(function (u) { return u.nome.toLowerCase().includes(\"burlamaqui\"); })).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 - Filtro ignorando maiúsculas e minúsculas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/usuarios?nome=bUrLaMaQuI",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "usuarios?nome=bUrLaMaQuI"
+          ]
+        },
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{emailTeste}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{novaSenha}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Filtro case-insensitive retorna 200\", function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "    const resposta = pm.response.json();",
+              "    pm.expect(resposta).to.have.property(\"content\").that.is.an(\"array\");",
+              "    pm.expect(resposta.content.some(function (u) { return u.nome.toLowerCase().includes(\"burlamaqui\"); })).to.eql(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
