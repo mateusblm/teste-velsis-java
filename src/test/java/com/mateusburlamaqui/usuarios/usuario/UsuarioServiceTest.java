@@ -10,7 +10,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,6 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -150,5 +155,43 @@ class UsuarioServiceTest {
         verify(passwordEncoder, never()).encode(anyString());
 
         verify(emailService, never()).enviar(anyString(), anyString());
+    }
+
+
+    @Test
+    void deveListarUsuariosSemFiltro() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Usuario usuario = new Usuario("Mateus Burlamaqui","mateus@gmail.com","senha-criptografada");
+
+        Page<Usuario> pagina = new PageImpl<>(List.of(usuario), pageable, 1);
+
+        when(usuarioRepository.findAll(pageable)).thenReturn(pagina);
+
+        Page<UsuarioResponse> resultado = usuarioService.listar(null, pageable);
+
+        assertEquals(1, resultado.getTotalElements());
+        assertEquals("Mateus Burlamaqui", resultado.getContent().getFirst().nome());
+        assertEquals("mateus@gmail.com", resultado.getContent().getFirst().email());
+
+        verify(usuarioRepository).findAll(pageable);
+    }
+
+    @Test
+    void deveListarUsuariosFiltrandoPorNome() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Usuario usuario = new Usuario("Mateus Burlamaqui", "mateus@gmail.com", "senha-criptografada");
+
+        Page<Usuario> pagina = new PageImpl<>(List.of(usuario), pageable, 1);
+
+        when(usuarioRepository.findByNomeContainingIgnoreCase("Mateus", pageable)).thenReturn(pagina);
+
+        Page<UsuarioResponse> resultado =usuarioService.listar("  Mateus  ", pageable);
+
+        assertEquals(1, resultado.getTotalElements());
+        assertEquals("Mateus Burlamaqui", resultado.getContent().getFirst().nome());
+
+        verify(usuarioRepository).findByNomeContainingIgnoreCase( "Mateus", pageable);
     }
 }
