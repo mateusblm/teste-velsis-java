@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mateusburlamaqui.usuarios.email.EmailService;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioResponse;
+import com.mateusburlamaqui.usuarios.usuario.excecao.UsuarioNaoEncontradoException;
 
 @Service
 public class UsuarioService {
@@ -32,6 +33,13 @@ public class UsuarioService {
         Usuario usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
         emailService.enviar(usuario.getEmail(), "Bem-vindo(a) " + usuario.getNome());
         return UsuarioResponse.de(usuarioSalvo);
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioResponse buscarPorId(Long id) {
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
+
+        return UsuarioResponse.de(usuario);
     }
     
 }
