@@ -1,5 +1,6 @@
 package com.mateusburlamaqui.usuarios.excecao;
 
+import com.mateusburlamaqui.usuarios.email.excecao.EmailJaCadastradoException;
 import com.mateusburlamaqui.usuarios.usuario.excecao.UsuarioNaoEncontradoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +41,14 @@ public class TratadorGlobalException {
         ErroResponse resposta = new ErroResponse(LocalDateTime.now(),status.value(),"Dados inválidos.",campos);
 
         return ResponseEntity.status(status).body(resposta);
+    }
+
+    @ExceptionHandler(EmailJaCadastradoException.class)
+    public ResponseEntity<ErroResponse> tratarEmailJaCadastrado(EmailJaCadastradoException excecao) {
+        HttpStatus status = HttpStatus.CONFLICT;
+
+        ErroResponse erro = new ErroResponse(LocalDateTime.now(), status.value(), excecao.getMessage(), Map.of());
+
+        return ResponseEntity.status(status).body(erro);
     }
 }

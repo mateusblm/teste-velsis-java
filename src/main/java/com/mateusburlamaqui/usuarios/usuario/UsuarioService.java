@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.mateusburlamaqui.usuarios.email.EmailService;
+import com.mateusburlamaqui.usuarios.email.excecao.EmailJaCadastradoException;
 import com.mateusburlamaqui.usuarios.usuario.dto.AtualizarUsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioResponse;
@@ -27,9 +28,13 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponse cadastrar(UsuarioRequest usuarioRequest) {
+
+        String email = usuarioRequest.email().trim().toLowerCase();
+        validarEmailDisponivel(email);
+
         Usuario usuario = new Usuario(
             usuarioRequest.nome().trim(),
-            usuarioRequest.email().trim().toLowerCase(),
+            email,
             passwordEncoder.encode(usuarioRequest.senha())
         );
 
@@ -49,7 +54,10 @@ public class UsuarioService {
     public UsuarioResponse atualizar(Long id,AtualizarUsuarioRequest request) {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
 
-        usuario.atualizarDados(request.nome().trim(), request.email().trim().toLowerCase());
+        String email = request.email().trim().toLowerCase();
+        validarEmailDisponivelParaAtualizacao(email, id);
+
+        usuario.atualizarDados(request.nome().trim(), email);
 
         if (request.senha() != null) {
             String senhaCriptografada =passwordEncoder.encode(request.senha());
@@ -75,6 +83,18 @@ public class UsuarioService {
         }
 
         return usuarios.map(usuario -> UsuarioResponse.de(usuario));
+    }
+
+    private void validarEmailDisponivel(String email) {
+        if (usuarioRepository.existsByEmailIgnoreCase(email)) {
+            throw new EmailJaCadastradoException(email);
+        }
+    }
+
+    private void validarEmailDisponivelParaAtualizacao(String email, Long id) {
+        if (usuarioRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
+            throw new EmailJaCadastradoException(email);
+        }
     }
     
 }

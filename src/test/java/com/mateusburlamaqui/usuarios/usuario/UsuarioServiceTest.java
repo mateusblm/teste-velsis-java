@@ -1,5 +1,6 @@
 package com.mateusburlamaqui.usuarios.usuario;
 import com.mateusburlamaqui.usuarios.email.EmailService;
+import com.mateusburlamaqui.usuarios.email.excecao.EmailJaCadastradoException;
 import com.mateusburlamaqui.usuarios.usuario.dto.AtualizarUsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioResponse;
@@ -193,5 +194,40 @@ class UsuarioServiceTest {
         assertEquals("Mateus Burlamaqui", resultado.getContent().getFirst().nome());
 
         verify(usuarioRepository).findByNomeContainingIgnoreCase( "Mateus", pageable);
+    }
+
+
+    @Test
+    void deveImpedirCadastroComEmailJaCadastrado() {
+        UsuarioRequest request = new UsuarioRequest("Mateus Burlamaqui", "mateus@gmail.com", "senha123");
+
+        when(usuarioRepository.existsByEmailIgnoreCase("mateus@gmail.com")).thenReturn(true);
+
+        EmailJaCadastradoException excecao = assertThrows(EmailJaCadastradoException.class, () -> usuarioService.cadastrar(request));
+
+        assertEquals("Já existe um usuário cadastrado com o e-mail: "+ "mateus@gmail.com", excecao.getMessage());
+
+        verify(passwordEncoder, never()).encode(anyString());
+
+        verify(usuarioRepository, never()).saveAndFlush(any(Usuario.class));
+
+        verify(emailService, never()).enviar(anyString(), anyString());
+    }
+
+    @Test
+    void deveImpedirAtualizacaoComEmailDeOutroUsuario() {
+        Usuario usuario = new Usuario("Mateus","email-antigo@gmail.com","senha-criptografada");
+
+        AtualizarUsuarioRequest request = new AtualizarUsuarioRequest("Mateus Burlamaqui", "email-existente@gmail.com", null);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        when(usuarioRepository.existsByEmailIgnoreCaseAndIdNot("email-existente@gmail.com", 1L)).thenReturn(true);
+
+        assertThrows(EmailJaCadastradoException.class, () -> usuarioService.atualizar(1L, request));
+
+        verify(usuarioRepository, never()).saveAndFlush(any(Usuario.class));
+
+        verify(emailService, never()).enviar(anyString(), anyString());
     }
 }
