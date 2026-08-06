@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -76,6 +77,43 @@ class UsuarioControllerTest {
                 .andExpect(jsonPath("$.campos.nome").value("O nome é obrigatório."))
                 .andExpect(jsonPath("$.campos.email").value("O e-mail informado é inválido."))
                 .andExpect(jsonPath("$.campos.senha").value("A senha deve ter entre 8 e 100 caracteres."));
+    }
+
+    @Test
+    void deveRetornarErroQuandoCorpoDaRequisicaoForInvalido() throws Exception {
+        mockMvc.perform(post("/api/usuarios").contentType(APPLICATION_JSON)
+                .content("{\"nome\": \"Mateus\","))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.mensagem").value("Corpo da requisição inválido."))
+                .andExpect(jsonPath("$.campos").isEmpty());
+    }
+
+    @Test
+    void deveRetornarErroQuandoIdForInvalido() throws Exception {
+        mockMvc.perform(get("/api/usuarios/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.mensagem").value("Parâmetro inválido."))
+                .andExpect(jsonPath("$.campos.id").value("O parâmetro informado é inválido."));
+    }
+
+    @Test
+    void deveRetornarErroQuandoBancoIdentificarEmailDuplicado() throws Exception {
+        when(usuarioService.cadastrar(any(UsuarioRequest.class)))
+                .thenThrow(new DataIntegrityViolationException("E-mail duplicado"));
+
+        mockMvc.perform(post("/api/usuarios").contentType(APPLICATION_JSON)
+                .content("""
+                        {
+                        "nome": "Mateus Burlamaqui",
+                        "email": "mateus@gmail.com",
+                        "senha": "senha123"
+                        }
+                        """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.mensagem").value("Já existe um usuário cadastrado com o e-mail informado."));
     }
 
     @Test
