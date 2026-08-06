@@ -29,6 +29,8 @@ public class SecurityConfig {
                     "/v3/api-docs/**"
                 )
                 .permitAll()
+                .requestMatchers("/actuator/health")
+                .permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/usuarios")
                 .permitAll()
                 .anyRequest()
