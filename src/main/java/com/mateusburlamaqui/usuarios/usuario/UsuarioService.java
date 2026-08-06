@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mateusburlamaqui.usuarios.email.EmailService;
+import com.mateusburlamaqui.usuarios.usuario.dto.AtualizarUsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioRequest;
 import com.mateusburlamaqui.usuarios.usuario.dto.UsuarioResponse;
 import com.mateusburlamaqui.usuarios.usuario.excecao.UsuarioNaoEncontradoException;
@@ -40,6 +41,24 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
 
         return UsuarioResponse.de(usuario);
+    }
+
+    @Transactional
+    public UsuarioResponse atualizar(Long id,AtualizarUsuarioRequest request) {
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow(() -> new UsuarioNaoEncontradoException(id));
+
+        usuario.atualizarDados(request.nome().trim(), request.email().trim().toLowerCase());
+
+        if (request.senha() != null) {
+            String senhaCriptografada =passwordEncoder.encode(request.senha());
+            usuario.alterarSenha(senhaCriptografada);
+        }
+
+        Usuario usuarioAtualizado = usuarioRepository.saveAndFlush(usuario);
+
+        emailService.enviar(usuarioAtualizado.getEmail(), "Dados atualizados com sucesso.");
+
+        return UsuarioResponse.de(usuarioAtualizado);
     }
     
 }
