@@ -58,6 +58,7 @@ API REST para cadastro, consulta e atualização de usuários.
 │       │   ├── seguranca/SegurancaIntegracaoTest.java
 │       │   ├── usuario/UsuarioControllerTest.java
 │       │   ├── usuario/UsuarioServiceTest.java
+│       │   ├── usuario/UsuarioServiceIntegracaoTest.java
 │       │   └── UsuariosApiApplicationTests.java
 │       └── resources
 │           └── application-test.properties
@@ -175,6 +176,7 @@ Os testes usam H2 e cobrem:
 - usuário inexistente;
 - e-mail duplicado;
 - atualização com e sem nova senha;
+- rollback da transação quando o envio de e-mail falha;
 - filtro por nome;
 - paginação;
 - respostas do controller;
@@ -183,7 +185,7 @@ Os testes usam H2 e cobrem:
 - senha incorreta;
 - autenticação válida.
 
-Os cenários foram escolhidos por cobrirem as regras de negócio mais sensíveis da aplicação como integridade dos dados, segurança das credenciais, atualização de senha, consulta paginada e tratamento adequado dos principais erros retornados ao cliente. Os testes de service validam as regras de negócio de forma isolada, os testes de controller verificam os contratos HTTP, e os testes de integração confirmam que as regras de segurança funcionam com a aplicação carregada.
+Os cenários foram escolhidos por cobrirem as regras de negócio mais sensíveis da aplicação como integridade dos dados, segurança das credenciais, atualização de senha, consulta paginada, atomicidade da persistência e tratamento adequado dos principais erros retornados ao cliente. Os testes de service validam as regras de negócio de forma isolada, os testes de controller verificam os contratos HTTP, e os testes de integração confirmam as regras de segurança e o rollback da transação quando o envio de e-mail falha.
 
 ## Endpoints
 
