@@ -93,7 +93,7 @@ de e-mail não participariam da mesma transação. Uma alternativa para maior co
 
 ### Banco de dados
 
-O PostgreSQL é executado pelo Docker Compose.
+O Docker Compose executa tanto o PostgreSQL quanto a aplicação Spring Boot. A API é construída pelo `Dockerfile` e iniciada no container `app`, enquanto o banco é iniciado no container `postgres`.
 
 Os testes usam H2 em memória para serem rápidos e independentes de um banco instalado na máquina. Por isso, não é necessário iniciar o PostgreSQL para executar mvn test.
 
@@ -108,6 +108,8 @@ Na raiz do projeto, execute:
 ```powershell
 docker compose up --build -d
 ```
+
+Esse comando constrói a imagem da API Spring Boot e sobe os dois serviços: `app` e `postgres`. Portanto, não é necessário ter Java, Maven ou PostgreSQL instalados na máquina para executar a aplicação dessa forma.
 
 Verifique o estado dos serviços:
 
@@ -142,7 +144,9 @@ docker compose down -v
 
 ## Como executar localmente
 
-Se o PostgreSQL estiver disponível na máquina, a aplicação pode ser iniciada com:
+Nesta opção, a aplicação Spring Boot é executada diretamente na máquina pelo Maven. O PostgreSQL precisa estar disponível separadamente, seja instalado localmente ou iniciado apenas pelo serviço `postgres` do Docker Compose.
+
+Com o PostgreSQL disponível, execute:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
